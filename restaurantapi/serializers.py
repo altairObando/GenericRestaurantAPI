@@ -1,7 +1,12 @@
 from .models import *
 from rest_framework import serializers
 
-class ContactSerializer(serializers.ModelSerializer):
+class OwnerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Owner
+        fields = '__all__'
+
+class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = '__all__'
@@ -10,6 +15,7 @@ class LocationSerializer(serializers.ModelSerializer):
         model = RestaurantLocations
         fields = '__all__'
 class RestaurantSerializer(serializers.ModelSerializer):
+    locations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     owner = serializers.StringRelatedField(many=False)
     class Meta:
         model = Restaurant
@@ -36,7 +42,7 @@ class ProductPriceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class OrdersSerializer(serializers.ModelSerializer):
-    OrderDetails_set = serializers.StringRelatedField(many=True)
+    OrderDetails_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     class Meta:
         model = Orders
         fields = '__all__'

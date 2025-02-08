@@ -10,3 +10,7 @@ class ProductPrice(models.Model):
 
     def __str__(self):
         return self.product.name + " - " + str(self.price)
+    
+    class Meta:
+        verbose_name = 'Product Price'
+        verbose_name_plural = 'Product Prices'

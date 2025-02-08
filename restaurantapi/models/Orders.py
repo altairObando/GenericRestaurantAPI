@@ -23,7 +23,6 @@ class Orders(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     class Meta:
-        db_table = 'orders'
         verbose_name = 'Order'
         verbose_name_plural = 'Orders'
 
@@ -31,7 +30,7 @@ class Orders(models.Model):
         return self.order_status
 
 class OrderDetails(models.Model):
-    order = models.ForeignKey(Orders, on_delete=models.CASCADE)
+    order = models.ForeignKey(Orders, on_delete=models.CASCADE, related_name='OrderDetails_set')
     item_name = models.CharField(max_length=100)
     item_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     quantity = models.IntegerField(default=1)
@@ -40,7 +39,6 @@ class OrderDetails(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'order_details'
         verbose_name = 'Order Detail'
         verbose_name_plural = 'Order Details'
 
