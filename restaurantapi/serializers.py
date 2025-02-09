@@ -15,7 +15,7 @@ class LocationSerializer(serializers.ModelSerializer):
         model = RestaurantLocations
         fields = '__all__'
 class RestaurantSerializer(serializers.ModelSerializer):
-    locations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    locations = LocationSerializer(many=True, read_only=True)
     owner = serializers.StringRelatedField(many=False)
     class Meta:
         model = Restaurant
@@ -37,16 +37,18 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 class ProductPriceSerializer(serializers.ModelSerializer):
+    product_set = ProductSerializer(many=True, read_only=True)
     class Meta:
         model = ProductPrice
         fields = '__all__'
 
-class OrdersSerializer(serializers.ModelSerializer):
-    OrderDetails_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    class Meta:
-        model = Orders
-        fields = '__all__'
 class OrderDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderDetails
+        fields = '__all__'
+
+class OrdersSerializer(serializers.ModelSerializer):
+    OrderDetails_set = OrderDetailsSerializer(many=True, read_only=True)
+    class Meta:
+        model = Orders
         fields = '__all__'

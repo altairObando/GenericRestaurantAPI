@@ -4,7 +4,7 @@ from .Products import Product
 class ProductPrice(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    date = models.DateField(auto_now_add=True)
+    created_on = models.DateField(auto_now_add=True, null=True, blank=True)
     valid_to = models.DateField(null=True, blank=True)
     is_extra = models.BooleanField(default=False)
 
