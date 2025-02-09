@@ -8,27 +8,14 @@ class ProductList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         restaurantId = self.request.query_params.get('restaurantId', None)
-        ownerId = self.request.query_params.get('ownerId', None)
-        if restaurantId is None or restaurantId == '':
-            raise validators.ValidationError({'restaurantId': 'This field is required.'})
+        ownerId = self.request.ownerId
         if ownerId is None or ownerId == '':
             raise validators.ValidationError({'ownerId': 'This field is required.'})
-        return super().get_queryset().filter(restaurant__id=restaurantId).filter(restaurant__owner__id=ownerId)
+        q1 = super().get_queryset().filter(restaurant__owner__id=ownerId)
+        if restaurantId is None:
+            return q1
+        return q1.filter(restaurant__id=restaurantId)
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-
-
-class PricingList(generics.ListCreateAPIView):
-    queryset = ProductPrice.objects.all()
-    serializer_class = ProductPriceSerializer
-
-    def get_queryset(self):
-        productId = self.request.query_params.get('productId', None)
-        if productId is None or productId == '':
-            raise validators.ValidationError({'productId': 'This field is required.'})
-        return super().get_queryset().filter(product__id=productId)
-class PricingDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ProductPrice.objects.all()
-    serializer_class = ProductPriceSerializer

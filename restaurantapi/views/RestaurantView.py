@@ -8,10 +8,10 @@ class RestaurantList(generics.ListCreateAPIView):
     serializer_class = RestaurantSerializer
 
     def get_queryset(self):
-        owner = self.request.query_params.get('owner', None)
-        if owner is None or owner == '':
-            raise validators.ValidationError({'owner': 'This field is required.'})
-        return super().get_queryset().filter(owner=owner)
+        ownerId = self.request.ownerId
+        if ownerId is None or ownerId == '':
+            raise validators.ValidationError({'ownerId': 'This field is required.'})
+        return super().get_queryset().filter(owner=ownerId)
 
 
 class RestaurantDetail(generics.RetrieveUpdateDestroyAPIView):

@@ -11,9 +11,16 @@ class ClientSerializer(serializers.ModelSerializer):
         model = Contact
         fields = '__all__'
 class LocationSerializer(serializers.ModelSerializer):
+    sublocations = serializers.SerializerMethodField()
     class Meta:
         model = RestaurantLocations
         fields = '__all__'
+    def get_sublocations(self, obj):
+        sublocations = obj.sublocations.all()
+        if sublocations.count() == 0:
+            return None
+        return LocationSerializer(sublocations, many=True).data
+    
 class RestaurantSerializer(serializers.ModelSerializer):
     locations = LocationSerializer(many=True, read_only=True)
     owner = serializers.StringRelatedField(many=False)

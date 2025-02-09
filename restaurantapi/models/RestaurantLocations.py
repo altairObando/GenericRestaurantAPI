@@ -6,7 +6,7 @@ class RestaurantLocations(models.Model):
     location = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='children')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='sublocations')
 
     class Meta:
         verbose_name = 'Restaurant Location'
