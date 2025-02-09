@@ -6,3 +6,4 @@ from .Restaurant import *
 from .Waiters import *
 from .RestaurantLocations import *
 from .Tax import *
+from .Menu import *
