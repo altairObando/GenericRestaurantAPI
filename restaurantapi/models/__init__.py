@@ -7,3 +7,4 @@ from .Waiters import *
 from .RestaurantLocations import *
 from .Tax import *
 from .Menu import *
+from .UserProfile import *

@@ -1,4 +1,4 @@
-from rest_framework import generics, validators
+from rest_framework import generics
 from ..models import * 
 from ..serializers import *
 
@@ -8,10 +8,10 @@ class ProductList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         restaurantId = self.request.query_params.get('restaurantId', None)
-        ownerId = self.request.ownerId
-        if ownerId is None or ownerId == '':
-            raise validators.ValidationError({'ownerId': 'This field is required.'})
-        q1 = super().get_queryset().filter(restaurant__owner__id=ownerId)
+        owner = self.request.user.profile.owner
+        if owner is None:
+            return super().get_queryset()
+        q1 = super().get_queryset().filter(restaurant__owner=owner)
         if restaurantId is None:
             return q1
         return q1.filter(restaurant__id=restaurantId)

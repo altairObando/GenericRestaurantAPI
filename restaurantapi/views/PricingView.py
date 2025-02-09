@@ -1,4 +1,4 @@
-from rest_framework import generics,validators
+from rest_framework import generics
 from ..models import * 
 from ..serializers import *
 
@@ -7,10 +7,11 @@ class PricingList(generics.ListCreateAPIView):
     serializer_class = ProductPriceSerializer
 
     def get_queryset(self):
-        ownerId = self.request.ownerId
-        if ownerId is None or ownerId == '':
-            raise validators.ValidationError({'ownerId': 'This field is required.'})
-        q1 = super().get_queryset().filter(product__restaurant__owner__id=ownerId)
+        owner = self.request.user.profile.owner
+        if owner is None:
+            return super().get_queryset()
+        q1 = super().get_queryset().filter(product__restaurant__owner=owner)
+        
         restaurantId = self.request.query_params.get('restaurantId',None)
         productId = self.request.query_params.get('productId',None)
         if restaurantId is not None:

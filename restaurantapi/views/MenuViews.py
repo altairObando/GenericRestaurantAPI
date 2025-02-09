@@ -7,11 +7,12 @@ class MenuList(generics.ListCreateAPIView):
     serializer_class =  MenuSerializer
 
     def get_queryset(self):
-        ownerId = self.request.ownerId
-        if ownerId is None or ownerId == '':
-            raise validators.ValidationError({'ownerId': 'This field is required.'})
+        owner = self.request.user.profile.owner
+        if owner is None:
+            return super().get_queryset()
+        q1 = super().get_queryset().filter(restaurant__owner=owner)
+        
         restaurantId = self.request.query_params.get('restaurantId', None)
-        q1 = super().get_queryset().filter(restaurant__owner__id=ownerId)
         if restaurantId is None or restaurantId =='':
             return q1
         return q1.filter(restaurant__id=restaurantId)
