@@ -52,3 +52,18 @@ class OrdersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Orders
         fields = '__all__'
+
+class MenuPricesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MenuPrices
+        fields = '__all__'
+class MenuCategoriesSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = MenuCategories
+        fields= '__all__'
+class MenuSerializer(serializers.ModelSerializer):
+    categories = MenuCategoriesSerializer(many=True, read_only=True)
+    prices = MenuPricesSerializer(many=True,read_only=True)
+    class Meta:
+        model = Menu
+        fields = '__all__'
