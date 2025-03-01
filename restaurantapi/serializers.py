@@ -74,3 +74,8 @@ class MenuSerializer(serializers.ModelSerializer):
     class Meta:
         model = Menu
         fields = '__all__'
+class ProfileSerializer(serializers.ModelSerializer):
+    contact = ClientSerializer(many=False, read_only=True)
+    class Meta:
+        model = UserProfile
+        fields = '__all__'

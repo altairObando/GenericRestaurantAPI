@@ -22,3 +22,10 @@ class ContactList(generics.ListCreateAPIView):
 class ContactDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Contact.objects.all()
     serializer_class = ClientSerializer
+
+class ProfileView(generics.ListAPIView):
+    queryset = UserProfile.objects.all()
+    serializer_class = ProfileSerializer
+    def get_queryset(self):
+        print(self.request.user)
+        return super().get_queryset().filter(user=self.request.user)
