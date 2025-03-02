@@ -6,6 +6,7 @@ from ..serializers import RestaurantSerializer
 class RestaurantList(generics.ListCreateAPIView):
     queryset = Restaurant.objects.all()
     serializer_class = RestaurantSerializer
+    pagination_class = None
 
     def get_queryset(self):
         owner = self.request.user.profile.owner

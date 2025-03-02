@@ -1,4 +1,7 @@
 from rest_framework import generics
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from ..models import * 
 from ..serializers import *
 
@@ -29,3 +32,9 @@ class ProfileView(generics.ListAPIView):
     def get_queryset(self):
         print(self.request.user)
         return super().get_queryset().filter(user=self.request.user)
+
+class UserInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        serializers = UserSerializer(request.user)
+        return Response(serializers.data)

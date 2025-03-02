@@ -19,5 +19,6 @@ urlpatterns = [
     path('menucategory/<int:pk>/', MenuViews.MenuCategoryDetail.as_view(), name='menu-category-detail'),
     path('menuprice/', MenuViews.MenuPriceList.as_view(), name='menu-price-list'),
     path('menuprice/<int:pk>/', MenuViews.MenuPriceDetail.as_view(), name='menu-price-detail'),
-    path('profile/', ProfileView.as_view(), name='profile-view')
+    path('profile/', ProfileView.as_view(), name='profile-view'),
+    path('user-info/', UserInfoView.as_view(), name='user-info'),
 ]

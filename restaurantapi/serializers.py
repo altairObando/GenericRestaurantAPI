@@ -1,5 +1,6 @@
 from .models import *
 from rest_framework import serializers
+from django.contrib.auth.models import User,Group
 
 class OwnerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -79,3 +80,10 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = '__all__'
+
+class UserSerializer(serializers.ModelSerializer):
+    groups = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = User
+        fields = ['username','email','is_superuser','groups']
