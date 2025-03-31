@@ -1,30 +1,28 @@
-from rest_framework import generics
+from rest_framework import viewsets, filters, generics
+from ..models import Owner, Contact, UserProfile
+from ..serializers import OwnerSerializer, ClientSerializer, ProfileSerializer, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from ..models import * 
-from ..serializers import *
 
-class OwnerList(generics.ListCreateAPIView):
+class OwnerViewSet(viewsets.ModelViewSet):
     queryset = Owner.objects.all()
     serializer_class = OwnerSerializer
-class OwnerDetails(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Owner.objects.all()
-    serializer_class = OwnerSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'phone_number']
 
-
-class ContactList(generics.ListCreateAPIView):
+class ContactViewSet(viewsets.ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ClientSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'phone_number']
+
     def get_queryset(self):
+        queryset = super().get_queryset()
         owner = self.request.user.profile.owner
-        if owner is None:
-            return super().get_queryset()   
-        return super().get_queryset().filter(owner=owner)
-
-class ContactDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Contact.objects.all()
-    serializer_class = ClientSerializer
+        if owner:
+            queryset = queryset.filter(owner=owner)
+        return queryset
 
 class ProfileView(generics.ListAPIView):
     queryset = UserProfile.objects.all()

@@ -1,21 +1,20 @@
-from rest_framework import generics
-from ..models import * 
-from ..serializers import *
+from rest_framework import viewsets, filters
+from ..models import Product
+from ..serializers import ProductSerializer
 
-class ProductList(generics.ListCreateAPIView):
+class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'code', 'category__name']
+    ordering_fields = ['name', 'code']
 
     def get_queryset(self):
-        restaurantId = self.request.query_params.get('restaurantId', None)
+        queryset = super().get_queryset()
         owner = self.request.user.profile.owner
-        if owner is None:
-            return super().get_queryset()
-        q1 = super().get_queryset().filter(restaurant__owner=owner)
-        if restaurantId is None:
-            return q1
-        return q1.filter(restaurant__id=restaurantId)
-
-class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+        if owner:
+            queryset = queryset.filter(restaurant__owner=owner)
+            restaurant_id = self.request.query_params.get('restaurantId')
+            if restaurant_id:
+                queryset = queryset.filter(restaurant_id=restaurant_id)
+        return queryset

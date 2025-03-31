@@ -1,47 +1,52 @@
-from rest_framework import generics, validators
+from rest_framework import viewsets, filters
 from ..models import Menu, MenuCategories, MenuPrices
 from ..serializers import MenuSerializer, MenuCategoriesSerializer, MenuPricesSerializer
 
-class MenuList(generics.ListCreateAPIView):
-    queryset = Menu.objects.all()
-    serializer_class =  MenuSerializer
-
-    def get_queryset(self):
-        owner = self.request.user.profile.owner
-        if owner is None:
-            return super().get_queryset()
-        q1 = super().get_queryset().filter(restaurant__owner=owner)
-        
-        restaurantId = self.request.query_params.get('restaurantId', None)
-        if restaurantId is None or restaurantId =='':
-            return q1
-        return q1.filter(restaurant__id=restaurantId)
-class MenuDetail(generics.RetrieveUpdateDestroyAPIView):
+class MenuViewSet(viewsets.ModelViewSet):
     queryset = Menu.objects.all()
     serializer_class = MenuSerializer
-
-class MenuCategoryList(generics.ListCreateAPIView):
-    queryset = MenuCategories.objects.all()
-    serializer_class =  MenuCategoriesSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at']
 
     def get_queryset(self):
-        menuId = self.request.query_params.get('menuId', None)
-        if menuId is None or menuId =='':
-            raise validators.ValidationError({'menuId': 'This field is required'})
-        return super().get_queryset().filter(menu__id=menuId)
-class MenuCategoryDetail(generics.RetrieveUpdateDestroyAPIView):
+        queryset = super().get_queryset()
+        owner = self.request.user.profile.owner
+        if owner:
+            queryset = queryset.filter(restaurant__owner=owner)
+            restaurant_id = self.request.query_params.get('restaurantId')
+            if restaurant_id:
+                queryset = queryset.filter(restaurant_id=restaurant_id)
+        return queryset
+
+class MenuCategoryViewSet(viewsets.ModelViewSet):
     queryset = MenuCategories.objects.all()
     serializer_class = MenuCategoriesSerializer
-
-class MenuPriceList(generics.ListCreateAPIView):
-    queryset = MenuPrices.objects.all()
-    serializer_class =  MenuPricesSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
 
     def get_queryset(self):
-        menuId = self.request.query_params.get('menuId', None)
-        if menuId is None or menuId =='':
-            raise validators.ValidationError({'menuId': 'This field is required'})
-        return super().get_queryset().filter(menu__id=menuId)
-class MenuPriceDetail(generics.RetrieveUpdateDestroyAPIView):
+        queryset = super().get_queryset()
+        owner = self.request.user.profile.owner
+        if owner:
+            queryset = queryset.filter(menu__restaurant__owner=owner)
+            menu_id = self.request.query_params.get('menuId')
+            if menu_id:
+                queryset = queryset.filter(menu_id=menu_id)
+        return queryset
+
+class MenuPriceViewSet(viewsets.ModelViewSet):
     queryset = MenuPrices.objects.all()
     serializer_class = MenuPricesSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['price']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        owner = self.request.user.profile.owner
+        if owner:
+            queryset = queryset.filter(menu__restaurant__owner=owner)
+            menu_id = self.request.query_params.get('menuId')
+            if menu_id:
+                queryset = queryset.filter(menu_id=menu_id)
+        return queryset

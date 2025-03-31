@@ -1,29 +1,24 @@
-from rest_framework import generics
-from ..models import * 
-from ..serializers import *
+from rest_framework import viewsets, filters
+from ..models import ProductPrice
+from ..serializers import ProductPriceSerializer
 
-class PricingList(generics.ListCreateAPIView):
+class PricingViewSet(viewsets.ModelViewSet):
     queryset = ProductPrice.objects.all()
     serializer_class = ProductPriceSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['price', 'created_at']
 
     def get_queryset(self):
+        queryset = super().get_queryset()
         owner = self.request.user.profile.owner
-        if owner is None:
-            return super().get_queryset()
-        q1 = super().get_queryset().filter(product__restaurant__owner=owner)
-        
-        restaurantId = self.request.query_params.get('restaurantId',None)
-        productId = self.request.query_params.get('productId',None)
-        if restaurantId is not None:
-            q1 = q1.filter(product__restaurant__id=restaurantId)
-        if productId is not None:
-            q1 = q1.filter(product__id=productId)
-        return q1
-
-        
-
-class PricingDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ProductPrice.objects.all()
-    serializer_class = ProductPriceSerializer
+        if owner:
+            queryset = queryset.filter(product__restaurant__owner=owner)
+            restaurant_id = self.request.query_params.get('restaurantId')
+            product_id = self.request.query_params.get('productId')
+            if restaurant_id:
+                queryset = queryset.filter(product__restaurant_id=restaurant_id)
+            if product_id:
+                queryset = queryset.filter(product_id=product_id)
+        return queryset
 
     

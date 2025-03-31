@@ -1,22 +1,29 @@
-from rest_framework import generics
-from ..models import * 
-from ..serializers import *
+from rest_framework import viewsets, filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from ..models import RestaurantLocations, Orders
+from ..serializers import LocationSerializer, OrdersSerializer
 
-
-class LocationList(generics.ListCreateAPIView):
+class LocationViewSet(viewsets.ModelViewSet):
     queryset = RestaurantLocations.objects.all()
     serializer_class = LocationSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['location', 'restaurant__name']
 
     def get_queryset(self):
+        queryset = super().get_queryset()
         owner = self.request.user.profile.owner
-        if owner is None:
-            return super().get_queryset()
-        restaurantId = self.request.query_params.get('restaurantId',None)
-        q1 = super().get_queryset().filter(parent=None).filter(restaurant__owner=owner)
-        if restaurantId is None:
-            return q1
-        return q1.filter(restaurant__id=restaurantId)
+        if owner:
+            queryset = queryset.filter(restaurant__owner=owner)
+            restaurant_id = self.request.query_params.get('restaurantId')
+            if restaurant_id:
+                queryset = queryset.filter(restaurant__id=restaurant_id)
+        return queryset.filter(parent=None)
 
-class LocationDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = RestaurantLocations.objects.all()
-    serializer_class = LocationSerializer
+    @action(detail=True, methods=['get'])
+    def active_order(self, request, pk=None):
+        order = Orders.objects.filter(location=pk, order_status='ACTIVE').first()
+        if not order:
+            return Response({'message': 'No active order found'}, status=404)
+        serializer = OrdersSerializer(order)
+        return Response(serializer.data)

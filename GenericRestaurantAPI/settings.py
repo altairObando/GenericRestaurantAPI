@@ -36,8 +36,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated', # Por defecto, requerir autenticación para todas las vistas API
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 50
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
 }
 
 AUTHENTICATION_BACKENDS = [
@@ -53,6 +59,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'django_filters',
+    'drf_spectacular',
     'restaurantapi',
 ]
 
@@ -149,3 +157,10 @@ if DEBUG:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 APPEND_SLASH=False
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Restaurant API',
+    'DESCRIPTION': 'Generic Restaurant Management API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}

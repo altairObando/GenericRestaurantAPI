@@ -1,20 +1,16 @@
-from rest_framework import generics
-from ..models import *
+from rest_framework import viewsets
+from ..filters import RestaurantFilter
+from ..models import Restaurant
 from ..serializers import RestaurantSerializer
 
-
-class RestaurantList(generics.ListCreateAPIView):
+class RestaurantViewSet(viewsets.ModelViewSet):
     queryset = Restaurant.objects.all()
     serializer_class = RestaurantSerializer
-    pagination_class = None
+    filterset_class = RestaurantFilter
 
     def get_queryset(self):
+        queryset = super().get_queryset()
         owner = self.request.user.profile.owner
-        if owner is None:
-            return super().get_queryset()
-        return super().get_queryset().filter(owner=owner)
-
-
-class RestaurantDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Restaurant.objects.all()
-    serializer_class = RestaurantSerializer
+        if owner:
+            queryset = queryset.filter(owner=owner)
+        return queryset
