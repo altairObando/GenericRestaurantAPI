@@ -15,7 +15,7 @@ router.register(r'pricing', PricingViewSet)
 router.register(r'owners', OwnerViewSet)
 router.register(r'contacts', ContactViewSet)
 router.register(r'auth', AuthViewSet, basename='auth')
-router.register(r'config', ConfigViewSet)
+router.register(r'config', ConfigViewSet, basename='config')
 
 urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile-view'),

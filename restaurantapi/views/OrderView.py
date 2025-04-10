@@ -1,8 +1,10 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from ..models import Orders, OrderDetail
-from ..serializers import OrdersSerializer, OrderDetailSerializer
+from django.db.models import Sum
+from datetime import datetime
+from ..models import Orders, OrderDetails
+from ..serializers import OrdersSerializer, OrderDetailsSerializer
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Orders.objects.all()
@@ -32,14 +34,14 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def details(self, request, pk=None):
         order = self.get_object()
-        details = order.orderdetail_set.all()
-        serializer = OrderDetailSerializer(details, many=True)
+        details = order.orderdetails_set.all()  # Cambiado de orderdetail_set a orderdetails_set
+        serializer = OrderDetailsSerializer(details, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def add_detail(self, request, pk=None):
         order = self.get_object()
-        serializer = OrderDetailSerializer(data=request.data)
+        serializer = OrderDetailsSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(order=order)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -49,23 +51,23 @@ class OrderViewSet(viewsets.ModelViewSet):
     def update_detail(self, request, pk=None):
         try:
             detail_id = request.data.get('detail_id')
-            detail = OrderDetail.objects.get(id=detail_id, order_id=pk)
-            serializer = OrderDetailSerializer(detail, data=request.data, partial=True)
+            detail = OrderDetails.objects.get(id=detail_id, order_id=pk)
+            serializer = OrderDetailsSerializer(detail, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except OrderDetail.DoesNotExist:
+        except OrderDetails.DoesNotExist:
             return Response({'error': 'Detail not found'}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=True, methods=['delete'])
     def remove_detail(self, request, pk=None):
         try:
             detail_id = request.query_params.get('detail_id')
-            detail = OrderDetail.objects.get(id=detail_id, order_id=pk)
+            detail = OrderDetails.objects.get(id=detail_id, order_id=pk)
             detail.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except OrderDetail.DoesNotExist:
+        except OrderDetails.DoesNotExist:
             return Response({'error': 'Detail not found'}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=True, methods=['post'])
