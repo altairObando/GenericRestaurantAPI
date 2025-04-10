@@ -28,10 +28,6 @@ class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
         fields = '__all__'
-class WaiterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Waiter
-        fields = '__all__'
 class TaxSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tax

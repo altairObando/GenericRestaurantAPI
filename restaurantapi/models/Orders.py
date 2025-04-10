@@ -1,6 +1,5 @@
 from django.db import models
 from .Restaurant import Restaurant
-from .Waiters import Waiter
 from .RestaurantLocations import RestaurantLocations
 
 ORDER_STATUS = (
@@ -13,7 +12,6 @@ ORDER_STATUS = (
 
 class Orders(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
-    waiter = models.ForeignKey(Waiter, on_delete=models.CASCADE)
     location = models.ForeignKey(RestaurantLocations, on_delete=models.CASCADE)
     order_status = models.CharField(max_length=50, choices=ORDER_STATUS, default='RESERVED')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -21,6 +19,7 @@ class Orders(models.Model):
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     taxes = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    waiter = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, related_name='attended_orders')
 
     class Meta:
         verbose_name = 'Order'
