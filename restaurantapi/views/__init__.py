@@ -5,3 +5,4 @@ from .OrderView import *
 from .PricingView import *
 from .ProductView import *
 from .MenuViews import *
+from .ConfigView import *

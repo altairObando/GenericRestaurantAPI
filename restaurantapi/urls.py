@@ -1,6 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 from .views import *
+from .views.AuthView import AuthViewSet
 
 router = DefaultRouter()
 router.register(r'restaurants', RestaurantViewSet)
@@ -13,6 +14,8 @@ router.register(r'orders', OrderViewSet)
 router.register(r'pricing', PricingViewSet)
 router.register(r'owners', OwnerViewSet)
 router.register(r'contacts', ContactViewSet)
+router.register(r'auth', AuthViewSet, basename='auth')
+router.register(r'config', ConfigViewSet)
 
 urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile-view'),
