@@ -33,6 +33,8 @@ class ProfileView(generics.ListAPIView):
 
 class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer  # Agregar esta línea
+    
     def get(self, request):
-        serializers = UserSerializer(request.user)
-        return Response(serializers.data)
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)

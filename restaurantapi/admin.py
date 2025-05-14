@@ -35,12 +35,25 @@ class Pricing(admin.ModelAdmin):
     list_display = ['id','product', 'price', 'created_on', 'valid_to', 'is_extra']
     search_fields = ['product', 'price']
     class Meta:
-        model = ProductPrice
+        model = ProductPrice        
+class OrdersAdmin(admin.ModelAdmin):
+    list_display = ['id', 'restaurant', 'location', 'order_status', 'subtotal', 'taxes', 'total']
+    search_fields = ['restaurant', 'location', 'order_status', 'waiter']
+    class Meta:
+        model = Orders
+
+class OrderDetailsAdmin(admin.ModelAdmin):
+    list_display = ['id', 'order', 'item', 'item_price', 'quantity', 'total']
+    search_fields = ['order', 'item', 'item_price']
+    class Meta:
+        model = OrderDetails
 
 admin.site.register(Owner, OwnerAdmin)
 admin.site.register(Contact, ContactAdmin)
 admin.site.register(Restaurant, RestaurantAdmin)
 admin.site.register(RestaurantLocations, RestaurantLocationsAdmin)
+admin.site.register(Orders, OrdersAdmin)
+admin.site.register(OrderDetails, OrderDetailsAdmin)
 admin.site.register(Tax)
 admin.site.register(OrderTaxes)
 admin.site.register(Product, ProductAdmin)

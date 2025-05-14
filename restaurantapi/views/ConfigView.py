@@ -11,6 +11,7 @@ from ..serializers import (
 )
 
 class ConfigViewSet(viewsets.ViewSet):
+    serializer_class = RestaurantSerializer
     @action(detail=False, methods=['get'])
     def initial_setup(self, request):
         user = request.user

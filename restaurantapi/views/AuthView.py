@@ -8,7 +8,7 @@ from ..serializers import UserSerializer, ProfileSerializer
 
 class AuthViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
-
+    serializer_class = UserSerializer
     def get_permissions(self):
         if self.action in ['change_password', 'logout', 'me']:
             return [IsAuthenticated()]

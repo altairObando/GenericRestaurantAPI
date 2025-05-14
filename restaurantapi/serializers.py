@@ -1,6 +1,8 @@
 from .models import *
 from rest_framework import serializers
 from django.contrib.auth.models import User,Group
+from typing import List, Dict, Optional
+from drf_spectacular.utils import extend_schema_field
 
 class OwnerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,7 +18,9 @@ class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = RestaurantLocations
         fields = '__all__'
-    def get_sublocations(self, obj):
+        
+    @extend_schema_field(List[Dict])
+    def get_sublocations(self, obj) -> Optional[List[Dict]]:
         sublocations = obj.sublocations.all()
         if sublocations.count() == 0:
             return None
