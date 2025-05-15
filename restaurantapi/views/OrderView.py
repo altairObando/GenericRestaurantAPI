@@ -89,6 +89,13 @@ class OrderViewSet(viewsets.ModelViewSet):
     def by_status(self, request):
         status_filter = request.query_params.get('status', 'PENDING')
         orders = self.get_queryset().filter(order_status=status_filter)
+        
+        # Aplicar paginación
+        page = self.paginate_queryset(orders)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+            
         serializer = self.get_serializer(orders, many=True)
         return Response(serializer.data)
 
