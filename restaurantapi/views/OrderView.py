@@ -19,9 +19,14 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
+        restaurant_id = self.request.query_params.get('restaurantId')
+
+        if restaurant_id:
+            queryset = queryset.filter(restaurant_id=restaurant_id)
         
         if user.profile.role == 'WAITER':
-            return queryset.filter(waiter=user)
+            queryset = queryset.filter(waiter=user)
+            return queryset
         
         owner = user.profile.owner
         if owner:
