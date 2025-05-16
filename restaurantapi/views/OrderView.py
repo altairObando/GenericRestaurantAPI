@@ -69,11 +69,41 @@ class OrderViewSet(viewsets.ModelViewSet):
     def remove_detail(self, request, pk=None):
         try:
             detail_id = request.query_params.get('detail_id')
+            if not detail_id:
+                return Response(
+                    {'error': 'Detail ID is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            order = self.get_object()
             detail = OrderDetails.objects.get(id=detail_id, order_id=pk)
+            
+            # Save information before deletion for response
+            detail_info = {
+                'id': detail.id,
+                'item_name': detail.item.name if detail.item else None,
+                'quantity': detail.quantity,
+                'price': detail.price
+            }
+            
             detail.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            
+            return Response({
+                'message': 'Order detail successfully deleted',
+                'deleted_item': detail_info,
+                'order_id': pk
+            }, status=status.HTTP_200_OK)
+            
         except OrderDetails.DoesNotExist:
-            return Response({'error': 'Detail not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                'error': 'Order detail not found',
+                'detail': f'Detail with ID {detail_id} not found for order {pk}'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'error': 'Error deleting order detail',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=True, methods=['post'])
     def change_status(self, request, pk=None):
