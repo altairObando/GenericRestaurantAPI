@@ -51,12 +51,17 @@ class ProductPriceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class OrderDetailsSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='item.name', read_only=True)
+    
     class Meta:
         model = OrderDetails
         fields = '__all__'
 
 class OrdersSerializer(serializers.ModelSerializer):
     OrderDetails_set = OrderDetailsSerializer(many=True, read_only=True)
+    waiter_name = serializers.CharField(source='waiter.username', read_only=True)
+    location_name = serializers.CharField(source='location.location', read_only=True)
+    
     class Meta:
         model = Orders
         fields = '__all__'

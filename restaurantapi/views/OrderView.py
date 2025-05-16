@@ -39,7 +39,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def details(self, request, pk=None):
         order = self.get_object()
-        details = order.orderdetails_set.all()  # Cambiado de orderdetail_set a orderdetails_set
+        details = order.OrderDetails_set.all()  # Cambiado de orderdetail_set a orderdetails_set
         serializer = OrderDetailsSerializer(details, many=True)
         return Response(serializer.data)
 
