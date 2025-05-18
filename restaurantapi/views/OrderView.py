@@ -83,7 +83,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                 'id': detail.id,
                 'item_name': detail.item.name if detail.item else None,
                 'quantity': detail.quantity,
-                'price': detail.price
+                'item_price': detail.item_price,  # Cambiado de price a item_price
+                'total': detail.total  # Agregado total para más información
             }
             
             detail.delete()
