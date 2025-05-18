@@ -128,6 +128,11 @@ class OrderViewSet(viewsets.ModelViewSet):
             
         serializer = self.get_serializer(orders, many=True)
         return Response(serializer.data)
+    @action(detail=False, methods=['get'])
+    def history(self,request):
+        orders = self.get_queryset().filter(order_status!='ACTIVE')
+        serializer = self.get_serializer(orders, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def assign_table(self, request, pk=None):
@@ -156,7 +161,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         total_orders = orders.count()
         completed_orders = orders.filter(order_status='PAID').count()
-        total_sales = orders.filter(order_status='PAID').aggregate(total=Sum('total_amount'))
+        total_sales = orders.filter(order_status='PAID').aggregate(total=Sum('total'))
 
         return Response({
             'total_orders': total_orders,
