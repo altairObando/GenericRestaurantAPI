@@ -45,7 +45,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 class ProductPriceSerializer(serializers.ModelSerializer):
-    product_set = ProductSerializer(many=True, read_only=True)
+    product = ProductSerializer(many=True, read_only=True)
     class Meta:
         model = ProductPrice
         fields = '__all__'
