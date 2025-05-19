@@ -49,6 +49,7 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer = OrderDetailsSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(order=order)
+            self.update_total_order(order.id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -60,6 +61,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             serializer = OrderDetailsSerializer(detail, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
+                self.update_total_order(order.id)
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except OrderDetails.DoesNotExist:
@@ -88,7 +90,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             }
             
             detail.delete()
-            
+            self.update_total_order(pk)
             return Response({
                 'message': 'Order detail successfully deleted',
                 'deleted_item': detail_info,
@@ -174,3 +176,16 @@ class OrderViewSet(viewsets.ModelViewSet):
                 'restaurant_id': restaurant_id if restaurant_id else None
             }
         })
+
+    def update_total_order(self, orderId):
+        try:
+            order = Orders.objects.get(id=order_id)
+            total_details = order.OrderDetails_set.aggregate(total=Sum('total'))
+            order.subtotal = total_details['total'] or 0
+            order.total = order.subtotal + (order.taxes or 0)
+            order.save()
+        except Orders.DoesNotExist:
+            raise ValueError(f"Order with id {order_id} not found")
+        except Exception as e:
+            raise ValueError(f"Error updating order total: {str(e)}")
+    
