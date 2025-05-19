@@ -7,6 +7,12 @@ from ..models import Orders, OrderDetails
 from ..serializers import OrdersSerializer, OrderDetailsSerializer
 from datetime import datetime
 class OrderViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing restaurant orders.
+    
+    Provides CRUD operations and additional actions for order management.
+    Handles order details, status changes, and financial calculations.
+    """
     queryset = Orders.objects.all()
     serializer_class = OrdersSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -38,6 +44,16 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def details(self, request, pk=None):
+        """
+        Retrieve all details for a specific order.
+        
+        Args:
+            request: HTTP request object
+            pk (int): Primary key of the order
+            
+        Returns:
+            Response: List of order details with their items and quantities
+        """
         order = self.get_object()
         details = order.OrderDetails_set.all()
         serializer = OrderDetailsSerializer(details, many=True)
@@ -45,6 +61,19 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def add_detail(self, request, pk=None):
+        """
+        Add a new item detail to an existing order.
+        
+        Args:
+            request: HTTP request object containing item details
+            pk (int): Primary key of the order
+            
+        Returns:
+            Response: Created order detail data or validation errors
+            
+        Triggers:
+            - Order total recalculation after adding item
+        """
         order = self.get_object()
         serializer = OrderDetailsSerializer(data=request.data)
         if serializer.is_valid():
@@ -55,6 +84,22 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['put'])
     def update_detail(self, request, pk=None):
+        """
+        Update an existing order detail.
+        
+        Args:
+            request: HTTP request object with updated detail data
+            pk (int): Primary key of the order
+            
+        Required Parameters:
+            - detail_id: ID of the order detail to update
+            
+        Returns:
+            Response: Updated detail data or error message
+            
+        Triggers:
+            - Order total recalculation after update
+        """
         try:
             detail_id = request.data.get('detail_id')
             detail = OrderDetails.objects.get(id=detail_id, order_id=pk)
@@ -69,6 +114,22 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['delete'])
     def remove_detail(self, request, pk=None):
+        """
+        Remove a detail from an order.
+        
+        Args:
+            request: HTTP request object
+            pk (int): Primary key of the order
+            
+        Query Parameters:
+            - detail_id: ID of the order detail to remove
+            
+        Returns:
+            Response: Deletion confirmation with removed item details
+            
+        Triggers:
+            - Order total recalculation after deletion
+        """
         try:
             detail_id = request.query_params.get('detail_id')
             if not detail_id:
@@ -110,6 +171,19 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def change_status(self, request, pk=None):
+        """
+        Update the status of an order.
+        
+        Args:
+            request: HTTP request object
+            pk (int): Primary key of the order
+            
+        Required Parameters:
+            - status: New status (RESERVED, ACTIVE, DELIVERED, CANCELLED, PAID)
+            
+        Returns:
+            Response: Status update confirmation or error message
+        """
         order = self.get_object()
         new_status = request.data.get('status')
         if new_status in ['RESERVED', 'ACTIVE', 'DELIVERED', 'CANCELLED', 'PAID']:
@@ -120,6 +194,15 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def by_status(self, request):
+        """
+        Retrieve orders filtered by status.
+        
+        Query Parameters:
+            - status: Order status to filter by (default: PENDING)
+            
+        Returns:
+            Response: List of orders with the specified status
+        """
         status_filter = request.query_params.get('status', 'PENDING')
         orders = self.get_queryset().filter(order_status=status_filter)
         
@@ -133,6 +216,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     @action(detail=False, methods=['get'])
     def history(self,request):
+        """
+        Retrieve order history excluding active orders.
+        
+        Query Parameters:
+            - date: Filter by specific date (format: YYYY-MM-DD)
+            
+        Returns:
+            Response: List of historical orders
+        """
         orders = self.get_queryset().exclude(order_status__exact='ACTIVE')
         date_filter = request.query_params.get('date')
         if date_filter:
@@ -143,6 +235,19 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def assign_table(self, request, pk=None):
+        """
+        Assign a table number to an order.
+        
+        Args:
+            request: HTTP request object
+            pk (int): Primary key of the order
+            
+        Required Parameters:
+            - table_number: Number of the table to assign
+            
+        Returns:
+            Response: Assignment confirmation or error message
+        """
         order = self.get_object()
         table_number = request.data.get('table_number')
         if table_number:
@@ -153,6 +258,20 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def daily_summary(self, request):
+        """
+        Generate a summary of orders for the current day.
+        
+        Query Parameters:
+            - waiterId: Filter by specific waiter
+            - restaurantId: Filter by specific restaurant
+            
+        Returns:
+            Response: Daily summary including:
+                - Total orders
+                - Completed orders
+                - Total sales
+                - Applied filters
+        """
         today = datetime.now().date()
         orders = self.get_queryset().filter(created_at__date=today)
 
@@ -181,7 +300,20 @@ class OrderViewSet(viewsets.ModelViewSet):
             }
         })
 
-    def update_total_order(self, orderId):
+    def update_total_order(self, order_id):
+        """
+        Update the total amount for an order.
+        
+        Args:
+            order_id (int): ID of the order to update
+            
+        Calculates:
+            - Subtotal from order details
+            - Total including taxes
+            
+        Raises:
+            ValueError: If order not found or calculation error occurs
+        """
         try:
             order = Orders.objects.get(id=order_id)
             total_details = order.OrderDetails_set.aggregate(total=Sum('total'))
