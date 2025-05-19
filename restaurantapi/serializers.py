@@ -45,7 +45,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 class ProductPriceSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(many=True, read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
     class Meta:
         model = ProductPrice
         fields = '__all__'
