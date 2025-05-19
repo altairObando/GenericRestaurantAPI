@@ -5,7 +5,7 @@ from django.db.models import Sum
 from datetime import datetime
 from ..models import Orders, OrderDetails
 from ..serializers import OrdersSerializer, OrderDetailsSerializer
-
+from datetime import datetime
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Orders.objects.all()
     serializer_class = OrdersSerializer
@@ -133,7 +133,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     @action(detail=False, methods=['get'])
     def history(self,request):
-        orders = self.get_queryset().filter(order_status!='ACTIVE')
+        orders = self.get_queryset().exclude(order_status__exact='ACTIVE')
+        date_filter = request.query_params.get('date')
+        if date_filter:
+            date_filter = datetime.strptime(date_filter, '%Y-%m-%d').date()
+            orders = orders.filter(created_at__date=date_filter)
         serializer = self.get_serializer(orders, many=True)
         return Response(serializer.data)
 
