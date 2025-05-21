@@ -11,8 +11,8 @@ ORDER_STATUS = (
 )
 
 class Orders(models.Model):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
-    location = models.ForeignKey(RestaurantLocations, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='orders')
+    location = models.ForeignKey(RestaurantLocations, on_delete=models.CASCADE, related_name='orders')
     order_status = models.CharField(max_length=50, choices=ORDER_STATUS, default='RESERVED')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -24,7 +24,6 @@ class Orders(models.Model):
     class Meta:
         verbose_name = 'Order'
         verbose_name_plural = 'Orders'
-
     def __str__(self):
         return self.order_status
 

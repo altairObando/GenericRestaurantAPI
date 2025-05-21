@@ -21,6 +21,13 @@ class LocationViewSet(viewsets.ModelViewSet):
         return queryset.filter(parent=None)
 
     @action(detail=True, methods=['get'])
+    def available_locations(self, request, pk=None):
+        query = self.get_queryset()
+        available = query.exclude(parent__isnull=False).filter(orders__order_status='ACTIVE')
+        serializer = LocationSerializer(available, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
     def active_order(self, request, pk=None):
         order = Orders.objects.filter(location=pk, order_status='ACTIVE').first()
         if not order:
