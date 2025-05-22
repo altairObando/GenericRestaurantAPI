@@ -3,9 +3,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Sum
 from datetime import datetime
-from ..models import Orders, OrderDetails
+from ..models import Orders, OrderDetails, OrderTaxes, Tax
 from ..serializers import OrdersSerializer, OrderDetailsSerializer
 from datetime import datetime
+from GenericRestaurantAPI.utils import evaluate_formula
+from django.forms.models import model_to_dict
 class OrderViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing restaurant orders.
@@ -18,7 +20,6 @@ class OrderViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['order_number', 'customer__name', 'waiter__username']
     ordering_fields = ['created_at', 'order_status', 'id']
-
     def perform_create(self, serializer):
         serializer.save(waiter=self.request.user)
 
@@ -45,12 +46,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def details(self, request, pk=None):
         """
-        Retrieve all details for a specific order.
-        
+        Retrieve all details for a specific order.        
         Args:
             request: HTTP request object
-            pk (int): Primary key of the order
-            
+            pk (int): Primary key of the order            
         Returns:
             Response: List of order details with their items and quantities
         """
@@ -92,8 +91,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             pk (int): Primary key of the order
             
         Required Parameters:
-            - detail_id: ID of the order detail to update
-            
+            - detail_id: ID of the order detail to update            
         Returns:
             Response: Updated detail data or error message
             
@@ -302,24 +300,35 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def update_total_order(self, order_id):
         """
-        Update the total amount for an order.
-        
+        Update the total amount for an order.        
         Args:
             order_id (int): ID of the order to update
-            
         Calculates:
             - Subtotal from order details
             - Total including taxes
-            
         Raises:
             ValueError: If order not found or calculation error occurs
         """
         try:
             order = Orders.objects.get(id=order_id)
             total_details = order.OrderDetails_set.aggregate(total=Sum('total'))
-            order.subtotal = total_details['total'] or 0
+            order.subtotal = total_details['total'] or 0            
+            # Calculate taxes - Optimized query
+            orderTaxes = OrderTaxes.objects.select_related('tax').filter(order=order)
+            if orderTaxes:
+                for item in orderTaxes:
+                    tax_amount = 0
+                    if float(item.tax.percentage) > 0:
+                        tax_amount = (item.tax.percentage * order.subtotal / 100)
+                    elif item.tax.formula is not None and len(item.tax.formula) > 0:
+                        tax_amount = evaluate_formula(item.tax.formula, model_to_dict(order))                    
+                    # Actualizar el monto del impuesto
+                    OrderTaxes.objects.filter(id=item.id).update(amount=tax_amount)                
+                # Recalcular el total de impuestos
+                order.taxes = orderTaxes.aggregate(total=Sum('amount'))['total']            
             order.total = order.subtotal + (order.taxes or 0)
             order.save()
+            
         except Orders.DoesNotExist:
             raise ValueError(f"Order with id {order_id} not found")
         except Exception as e:
