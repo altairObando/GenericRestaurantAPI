@@ -321,7 +321,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                     if float(item.tax.percentage) > 0:
                         tax_amount = (item.tax.percentage * order.subtotal / 100)
                     elif item.tax.formula is not None and len(item.tax.formula) > 0:
-                        tax_amount = evaluate_formula(item.tax.formula, model_to_dict(order))                    
+                        tax_amount = evaluate_formula(item.tax.formula, { "order": model_to_dict(order),"details": [model_to_dict(detail) for detail in order.OrderDetails_set.all()]})                   
                     # Actualizar el monto del impuesto
                     OrderTaxes.objects.filter(id=item.id).update(amount=tax_amount)                
                 # Recalcular el total de impuestos
