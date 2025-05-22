@@ -13,4 +13,7 @@ class RestaurantLocations(models.Model):
         verbose_name_plural = 'Locations'
 
     def __str__(self):
+        activeOrder = self.orders.filter(order_status='ACTIVE').first()
+        if activeOrder:
+            return f"{self.location} (Active Order: {activeOrder.id})"
         return self.location

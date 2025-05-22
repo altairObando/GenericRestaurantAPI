@@ -1,5 +1,5 @@
 from django.db import models
-from ..models import Orders
+from ..models import Orders, Restaurant
 
 class Tax(models.Model):
     name = models.CharField(max_length=100)
@@ -8,6 +8,9 @@ class Tax(models.Model):
     is_active = models.BooleanField(default=True)
     valid_from = models.DateField(auto_now_add=True)
     valid_to = models.DateField(null=True, blank=True)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='taxes', null=True, blank=True)
+    mandatory = models.BooleanField(default=False, null=True, blank=True)
+    
     
     def __str__(self):
         return self.name

@@ -1,7 +1,7 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from datetime import datetime
 from ..models import Orders, OrderDetails, OrderTaxes, Tax
 from ..serializers import OrdersSerializer, OrderDetailsSerializer
@@ -21,7 +21,38 @@ class OrderViewSet(viewsets.ModelViewSet):
     search_fields = ['order_number', 'customer__name', 'waiter__username']
     ordering_fields = ['created_at', 'order_status', 'id']
     def perform_create(self, serializer):
-        serializer.save(waiter=self.request.user)
+        """
+        Crea una nueva orden y asigna los impuestos obligatorios del restaurante.
+        
+        Args:
+            serializer: Serializer de la orden
+            
+        Efectos:
+            - Asigna el mesero actual como creador de la orden
+            - Agrega los impuestos obligatorios del restaurante
+            - Inicializa los montos de impuestos en cero
+        """
+        order = serializer.save(waiter=self.request.user)
+        
+        # Obtener impuestos obligatorios del restaurante
+        restaurant_taxes = Tax.objects.filter(
+            restaurant=order.location.restaurant,
+            mandatory=True,
+            is_active=True
+        ).filter(
+           Q(valid_to__isnull=True) | Q(valid_to__gte=datetime.now().date())
+        )
+        
+        # Crear OrderTaxes para cada impuesto obligatorio
+        for tax in restaurant_taxes:
+            OrderTaxes.objects.create(
+                tax=tax,
+                order=order,
+                amount=0  # El monto se calculará cuando se actualice el total
+            )
+        
+        # Actualizar el total de la orden para calcular los impuestos
+        self.update_total_order(order.id)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -318,7 +349,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             if orderTaxes:
                 for item in orderTaxes:
                     tax_amount = 0
-                    if float(item.tax.percentage) > 0:
+                    if item.tax.percentage is not None and float(item.tax.percentage) > 0:
                         tax_amount = (item.tax.percentage * order.subtotal / 100)
                     elif item.tax.formula is not None and len(item.tax.formula) > 0:
                         tax_amount = evaluate_formula(item.tax.formula, { "order": model_to_dict(order),"details": [model_to_dict(detail) for detail in order.OrderDetails_set.all()]})                   

@@ -48,14 +48,27 @@ class OrderDetailsAdmin(admin.ModelAdmin):
     class Meta:
         model = OrderDetails
 
+class TaxAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'percentage', 'is_active', 'restaurant']
+    search_fields = ['name']
+    class Meta:
+        model = Tax
+
+class OrderTaxesAdmin(admin.ModelAdmin):
+    list_display = ['order', 'tax', 'amount']
+    search_fields = ['order', 'tax']
+    class Meta:
+        model = OrderTaxes
+
+
 admin.site.register(Owner, OwnerAdmin)
 admin.site.register(Contact, ContactAdmin)
 admin.site.register(Restaurant, RestaurantAdmin)
 admin.site.register(RestaurantLocations, RestaurantLocationsAdmin)
 admin.site.register(Orders, OrdersAdmin)
 admin.site.register(OrderDetails, OrderDetailsAdmin)
-admin.site.register(Tax)
-admin.site.register(OrderTaxes)
+admin.site.register(Tax, TaxAdmin)
+admin.site.register(OrderTaxes, OrderTaxesAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductPrice, Pricing)
 admin.site.register(ProductCategory)
