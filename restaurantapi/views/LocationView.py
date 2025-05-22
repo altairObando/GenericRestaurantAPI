@@ -20,8 +20,8 @@ class LocationViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(restaurant__id=restaurant_id)
         return queryset.filter(parent=None)
 
-    @action(detail=True, methods=['get'])
-    def available_locations(self, request, pk=None):
+    @action(detail=False, methods=['get'])
+    def available_locations(self, request):
         query = self.get_queryset()
         available = query.exclude(parent__isnull=False).filter(orders__order_status='ACTIVE')
         serializer = LocationSerializer(available, many=True)
