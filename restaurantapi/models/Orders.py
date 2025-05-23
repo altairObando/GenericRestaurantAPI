@@ -25,7 +25,7 @@ class Orders(models.Model):
         verbose_name = 'Order'
         verbose_name_plural = 'Orders'
     def __str__(self):
-        return self.order_status
+        return f"Order #{self.id} - Location: {self.location} - Status: {self.order_status}"
 
 class OrderDetails(models.Model):
     order = models.ForeignKey(Orders, on_delete=models.CASCADE, related_name='OrderDetails_set')

@@ -22,3 +22,7 @@ class OrderTaxes(models.Model):
     
     def __str__(self):
         return self.tax.name + " - " + str(self.amount)
+
+    class Meta:
+        verbose_name = 'Order Taxes'
+        verbose_name_plural = 'Order Taxes'
