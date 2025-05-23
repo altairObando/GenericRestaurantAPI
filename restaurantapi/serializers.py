@@ -92,3 +92,16 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username','email','is_superuser','groups']
+
+class PaymentMethodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentMethod
+        fields = '__all__'
+
+class SplitPaymentSerializer(serializers.ModelSerializer):
+    payment_method_name = serializers.CharField(source='payment_method.name', read_only=True)
+    order_number = serializers.CharField(source='order.id', read_only=True)
+    
+    class Meta:
+        model = SplitPayment
+        fields = '__all__'

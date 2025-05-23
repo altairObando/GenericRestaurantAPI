@@ -16,6 +16,8 @@ router.register(r'owners', OwnerViewSet)
 router.register(r'contacts', ContactViewSet)
 router.register(r'auth', AuthViewSet, basename='auth')
 router.register(r'config', ConfigViewSet, basename='config')
+router.register(r'payment-methods', PaymentMethodViewSet)
+router.register(r'split-payments', SplitPaymentViewSet)
 
 urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile-view'),

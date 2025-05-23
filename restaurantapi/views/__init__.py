@@ -6,3 +6,4 @@ from .PricingView import *
 from .ProductView import *
 from .MenuViews import *
 from .ConfigView import *
+from .PaymentView import *

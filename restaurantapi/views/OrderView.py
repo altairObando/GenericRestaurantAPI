@@ -5,9 +5,9 @@ from django.db.models import Sum, Q
 from datetime import datetime
 from ..models import Orders, OrderDetails, OrderTaxes, Tax
 from ..serializers import OrdersSerializer, OrderDetailsSerializer
-from datetime import datetime
 from GenericRestaurantAPI.utils import evaluate_formula
 from django.forms.models import model_to_dict
+from decimal import Decimal
 class OrderViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing restaurant orders.
@@ -342,26 +342,59 @@ class OrderViewSet(viewsets.ModelViewSet):
         """
         try:
             order = Orders.objects.get(id=order_id)
+
+            # Si la orden está activa, verificar y agregar impuestos obligatorios faltantes
+            if order.order_status == 'ACTIVE':
+                # Obtener impuestos obligatorios del restaurante
+                mandatory_restaurant_taxes = Tax.objects.filter(
+                    restaurant=order.location.restaurant,
+                    mandatory=True,
+                    is_active=True
+                ).filter(
+                   Q(valid_to__isnull=True) | Q(valid_to__gte=datetime.now()) # Usar datetime.date.today() para comparar fechas
+                )
+
+                existing_order_taxes_pks = OrderTaxes.objects.filter(order=order).values_list('tax__pk', flat=True)
+
+                for tax in mandatory_restaurant_taxes:
+                    if tax.pk not in existing_order_taxes_pks:
+                        OrderTaxes.objects.create(
+                            tax=tax,
+                            order=order,
+                            amount=0  # El monto se calculará más adelante
+                        )
+            
             total_details = order.OrderDetails_set.aggregate(total=Sum('total'))
             order.subtotal = total_details['total'] or 0            
             # Calculate taxes - Optimized query
-            orderTaxes = OrderTaxes.objects.select_related('tax').filter(order=order)
-            if orderTaxes:
-                for item in orderTaxes:
-                    tax_amount = 0
-                    if item.tax.percentage is not None and float(item.tax.percentage) > 0:
-                        tax_amount = (item.tax.percentage * order.subtotal / 100)
+            orderTaxes_qs = OrderTaxes.objects.select_related('tax').filter(order=order) # Renombrado para evitar confusión con el modelo
+            if orderTaxes_qs.exists(): # Usar exists() para verificar si hay impuestos
+                for item in orderTaxes_qs:
+                    tax_amount = Decimal('0.00') # Inicializar como Decimal
+                    if item.tax.percentage is not None and item.tax.percentage > 0: # No es necesario convertir a float aquí
+                        tax_amount = (item.tax.percentage * order.subtotal / Decimal('100.0'))
                     elif item.tax.formula is not None and len(item.tax.formula) > 0:
-                        tax_amount = evaluate_formula(item.tax.formula, { "order": model_to_dict(order),"details": [model_to_dict(detail) for detail in order.OrderDetails_set.all()]})                   
+                        # Asegurarse que evaluate_formula devuelve Decimal o se convierte
+                        evaluated_value = evaluate_formula(item.tax.formula, { "order": model_to_dict(order),"details": [model_to_dict(detail) for detail in order.OrderDetails_set.all()]})
+                        tax_amount = Decimal(str(evaluated_value)) # Convertir el resultado a Decimal
                     # Actualizar el monto del impuesto
-                    OrderTaxes.objects.filter(id=item.id).update(amount=tax_amount)                
-                # Recalcular el total de impuestos
-                order.taxes = orderTaxes.aggregate(total=Sum('amount'))['total']            
-            order.total = order.subtotal + (order.taxes or 0)
+                    # OrderTaxes.objects.filter(id=item.id).update(amount=tax_amount) # Actualizar directamente el objeto es más eficiente si ya lo tienes
+                    item.amount = tax_amount
+                    item.save() # Guardar el objeto individualmente o considerar bulk_update si es necesario para muchos items
+                
+                # Recalcular el total de impuestos después de actualizar cada uno
+                order.taxes = orderTaxes_qs.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+            else:
+                order.taxes = Decimal('0.00')
+                        
+            order.total = order.subtotal + (order.taxes or Decimal('0.00'))
             order.save()
             
         except Orders.DoesNotExist:
             raise ValueError(f"Order with id {order_id} not found")
         except Exception as e:
-            raise ValueError(f"Error updating order total: {str(e)}")
+            # Considerar logging del error aquí para mejor depuración
+            # import logging
+            # logging.error(f"Error updating order total for order {order_id}: {str(e)}", exc_info=True)
+            raise ValueError(f"Error updating order total for order {order_id}: {str(e)}")
     

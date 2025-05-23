@@ -73,3 +73,18 @@ admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductPrice, Pricing)
 admin.site.register(ProductCategory)
 admin.site.register(UserProfile)
+
+class PaymentMethodAdmin(admin.ModelAdmin):
+    list_display = ['name', 'is_active']
+    search_fields = ['name']
+    list_filter = ['is_active']
+
+admin.site.register(PaymentMethod, PaymentMethodAdmin)
+
+class SplitPaymentAdmin(admin.ModelAdmin):
+    list_display = ['order', 'payment_method', 'currency', 'amount_paid_by_customer', 'change_due', 'created_at']
+    search_fields = ['order__id', 'payment_method__name']
+    list_filter = ['payment_method', 'currency', 'created_at']
+    raw_id_fields = ['order'] # Useful for selecting orders
+
+admin.site.register(SplitPayment, SplitPaymentAdmin)
