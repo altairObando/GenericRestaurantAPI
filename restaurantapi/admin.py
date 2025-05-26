@@ -37,7 +37,7 @@ class Pricing(admin.ModelAdmin):
     class Meta:
         model = ProductPrice        
 class OrdersAdmin(admin.ModelAdmin):
-    list_display = ['id', 'restaurant', 'location', 'order_status', 'subtotal', 'taxes', 'total']
+    list_display = ['id', 'restaurant', 'created_at', 'order_status', 'subtotal', 'taxes', 'total']
     search_fields = ['restaurant', 'location', 'order_status', 'waiter']
     class Meta:
         model = Orders

@@ -237,8 +237,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         if date_filter:
             date_filter = datetime.strptime(date_filter, '%Y-%m-%d').date()
             orders = self.get_queryset().filter(order_status=status_filter, created_at__date=date_filter)
-        orders = self.get_queryset().filter(order_status=status_filter)
-        
+            # Aplicar paginación
+            page = self.paginate_queryset(orders)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+                
+            serializer = self.get_serializer(orders, many=True)
+            return Response(serializer.data)
+        orders = self.get_queryset().filter(order_status=status_filter)        
         # Aplicar paginación
         page = self.paginate_queryset(orders)
         if page is not None:
