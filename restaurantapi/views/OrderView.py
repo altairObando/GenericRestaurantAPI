@@ -18,7 +18,7 @@ class OrderViewSet(viewsets.ModelViewSet):
     queryset = Orders.objects.all()
     serializer_class = OrdersSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['order_number', 'customer__name', 'waiter__username']
+    search_fields = ['id','waiter__username','order_status','created_at']
     ordering_fields = ['created_at', 'order_status', 'id']
     def perform_create(self, serializer):
         """
@@ -233,6 +233,10 @@ class OrderViewSet(viewsets.ModelViewSet):
             Response: List of orders with the specified status
         """
         status_filter = request.query_params.get('status', 'PENDING')
+        date_filter = request.query_params.get('date')
+        if date_filter:
+            date_filter = datetime.strptime(date_filter, '%Y-%m-%d').date()
+            orders = self.get_queryset().filter(order_status=status_filter, created_at__date=date_filter)
         orders = self.get_queryset().filter(order_status=status_filter)
         
         # Aplicar paginación

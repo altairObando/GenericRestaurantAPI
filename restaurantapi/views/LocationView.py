@@ -23,14 +23,8 @@ class LocationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def available_locations(self, request):
         query = self.get_queryset()
-        print("After get queryset")
-        print(len(query))
         sublocations = query.filter(parent__isnull=False)
-        print("sublocations")
-        print(len(sublocations))
         available = sublocations.exclude(orders__order_status='ACTIVE')
-        print("available")
-        print(len(available))
         serializer = LocationSerializer(available, many=True)
         return Response(serializer.data)
 
