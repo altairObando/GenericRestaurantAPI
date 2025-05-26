@@ -24,6 +24,13 @@ class LocationViewSet(viewsets.ModelViewSet):
     def available_locations(self, request):
         query = self.get_queryset()
         sublocations = query.filter(parent__isnull=False)
+        date_filter = request.query_params.get('date')
+        if date_filter:
+            date_filter = datetime.strptime(date_filter, '%Y-%m-%d').date()
+            available = sublocations.exclude(orders__order_status='ACTIVE', orders__created_at__date=date_filter)
+            serializer = LocationSerializer(available, many=True)
+            return Response(serializer.data)
+        
         available = sublocations.exclude(orders__order_status='ACTIVE')
         serializer = LocationSerializer(available, many=True)
         return Response(serializer.data)
