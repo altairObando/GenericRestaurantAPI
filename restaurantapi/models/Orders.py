@@ -20,7 +20,7 @@ class Orders(models.Model):
     taxes = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     waiter = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, related_name='attended_orders')
-
+    reserved_date = models.DateTimeField(null=True, blank=True)
     class Meta:
         verbose_name = 'Order'
         verbose_name_plural = 'Orders'

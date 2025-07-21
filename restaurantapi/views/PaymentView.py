@@ -1,6 +1,7 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Sum
 from datetime import datetime
 from ..models import PaymentMethod, SplitPayment
 from ..serializers import PaymentMethodSerializer, SplitPaymentSerializer
@@ -46,7 +47,28 @@ class SplitPaymentViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(is_refunded=(is_refunded.lower() == 'true'))
             
         return queryset
-    
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        totalOrder = instance.order.total
+        otherPayments = SplitPayment.objects.filter(order_id=instance.order_id)
+        # if len(otherPayments) > 0:
+        payed = otherPayments.aggregate(total_paid=Sum('amount_paid_by_customer'))
+        totalPayed = payed['total_paid']
+        if totalPayed >= totalOrder:
+            ## Update order status to paid
+            instance.order.order_status = 'PAID'
+            instance.order.save()
+        instance.change_due = max(totalPayed - totalOrder, 0)
+        instance.save()
+        # else:
+        #     instance.change_due = totalOrder - instance.amount_paid_by_customer
+        #     if totalOrder <= (instance.amount_paid_by_customer - instance.change_due):
+        #         instance.order.order_status = 'PAID'
+        #         instance.order.save()
+        #     #instance.change_due = 0
+        #serializer.save(modified=instance)
+            
+
     @action(detail=True, methods=['post'])
     def refund(self, request, pk=None):
         """Mark a payment as refunded"""

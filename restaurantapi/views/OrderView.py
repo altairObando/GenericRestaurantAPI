@@ -1,7 +1,7 @@
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, F, Case, When, Value, DateTimeField
 from datetime import datetime
 from ..models import Orders, OrderDetails, OrderTaxes, Tax
 from ..serializers import OrdersSerializer, OrderDetailsSerializer
@@ -135,7 +135,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             serializer = OrderDetailsSerializer(detail, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
-                self.update_total_order(order.id)
+                self.update_total_order(pk)
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except OrderDetails.DoesNotExist:
@@ -236,7 +236,18 @@ class OrderViewSet(viewsets.ModelViewSet):
         date_filter = request.query_params.get('date')
         if date_filter:
             date_filter = datetime.strptime(date_filter, '%Y-%m-%d').date()
-            orders = self.get_queryset().filter(order_status=status_filter, created_at__date=date_filter)
+            if status_filter == 'RESERVED':
+                orders = self.get_queryset().annotate(
+                    relevant_date=Case(
+                        When(reserved_date__isnull=False, then=F('reserved_date')),
+                        default=F('created_at'),
+                        output_field=DateTimeField()
+                    )
+                ).filter(relevant_date__date=date_filter)
+            else:
+                orders = self.get_queryset().filter(created_at__date=date_filter)
+            # Filtrar por estado
+            orders = orders.filter(order_status=status_filter).order_by('pk')
             # Aplicar paginación
             page = self.paginate_queryset(orders)
             if page is not None:
@@ -245,7 +256,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 
             serializer = self.get_serializer(orders, many=True)
             return Response(serializer.data)
-        orders = self.get_queryset().filter(order_status=status_filter)        
+        orders = self.get_queryset().filter(order_status=status_filter).order_by('pk')
         # Aplicar paginación
         page = self.paginate_queryset(orders)
         if page is not None:
